@@ -90,6 +90,7 @@ public class Start {
             while (true) {
                 if (System.currentTimeMillis() + cha < startTime) {
                     System.out.println("正在等待抢购时间");
+                    TimeUnit.MILLISECONDS.sleep(100);
                 } else {
                     break;
                 }
