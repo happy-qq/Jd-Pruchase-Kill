@@ -37,6 +37,7 @@ public class Login {
         stringListMap = Start.manager.get(url, requestHeaders);
         List cookieList = stringListMap.get("Cookie");
         String cookies = cookieList.get(0).toString();
+
         String token = cookies.split("wlfstk_smdl=")[1];
         headers.put("Cookie", cookies);
         //判断是否扫二维码
