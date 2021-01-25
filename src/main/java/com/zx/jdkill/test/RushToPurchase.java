@@ -25,24 +25,25 @@ public class RushToPurchase implements Runnable {
     volatile static Boolean purchase = true;
     static Logger log = LoggerFactory.getLogger(RushToPurchase.class);
 
+    @Override
     public void run() {
         JSONObject headers = new JSONObject();
         headers.put(Start.headerAgent, Start.headerAgentArg);
         headers.put(Start.Referer, Start.RefererArg);
         while (purchase) {
             //获取ip，使用的是免费的 携趣代理 ，不需要或者不会用可以注释掉
-            if (!"".equals(Start.getIpUrl)) {
-                setIpProxy();
-            }
+//            if (!"".equals(Start.getIpUrl)) {
+//                setIpProxy();
+//            }
             //抢购
             String gate = null;
             List<String> cookie = new ArrayList<>();
             try {
                 synchronized (times) {
                     if (times < Start.ok) {
-                        gate = HttpUrlConnectionUtil.get(headers, "https://cart.jd.com/gate.action?pcount=1&ptype=1&pid=" + Start.pid);
+                        gate = HttpUrlConnectionUtil.get(headers, "https://cart.jd.com/gate.action?pcount=1&ptype=1&pid=" + Start.pid,"UTF-8");
                         if (!gate.contains("商品已成功加入")) {
-                            log.info("获取商品信息失败");
+                            log.info("获取商品信息失败:return:{}",gate);
                             continue;
                         } else {
                             times++;
@@ -62,7 +63,7 @@ public class RushToPurchase implements Runnable {
 //            cookie = stringListMap.get("Cookie");
 //            headers.put("Cookie", cookie.get(0).toString());
             try {
-                String orderInfo = HttpUrlConnectionUtil.get(headers, "https://trade.jd.com/shopping/order/getOrderInfo.action");
+                String orderInfo = HttpUrlConnectionUtil.get(headers, "https://trade.jd.com/shopping/order/getOrderInfo.action","UTF-8");
             } catch (IOException e) {
                 e.printStackTrace();
             }

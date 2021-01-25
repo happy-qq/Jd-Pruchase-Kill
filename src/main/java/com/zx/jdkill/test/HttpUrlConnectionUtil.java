@@ -26,7 +26,7 @@ public class HttpUrlConnectionUtil {
      * @return
      * @throws IOException
      */
-    public static String get(JSONObject headers, String url) throws IOException {
+    public static String get(JSONObject headers, String url,String charSet) throws IOException {
         String response = "";
         HttpURLConnection httpURLConnection = (HttpURLConnection) (new URL(url).openConnection());
         httpURLConnection.setRequestMethod("GET");
@@ -44,7 +44,7 @@ public class HttpUrlConnectionUtil {
             buffer = new byte[1024];
             int length = 0;
             while ((length = inputStream.read(buffer)) != -1) {
-                response = response + new String(buffer, 0, length, "UTF-8");
+                response = response + new String(buffer, 0, length, charSet);
             }
             httpURLConnection.disconnect();
         }

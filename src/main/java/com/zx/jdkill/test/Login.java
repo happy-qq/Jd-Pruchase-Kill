@@ -1,5 +1,6 @@
 package com.zx.jdkill.test;
 
+import cn.hutool.core.io.FileUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
@@ -7,12 +8,16 @@ import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinUser;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,10 +48,30 @@ public class Login {
 
         String token = cookies.split("wlfstk_smdl=")[1];
         headers.put("Cookie", cookies);
+
+        //当前项目下路径
+        File file = new File("");
+        String filePath = file.getCanonicalPath()+"/cookies/";
+
+        List<String> allFile=FileUtil.listFileNames(filePath);
+
+        if(allFile!=null&&allFile.size()>0){
+            if(allFile.get(0).contains(".cookies")){
+                String localCookies=FileUtil.readString(filePath+File.separator+allFile.get(0), Charset.defaultCharset());
+                log.info("read cookies:{}",localCookies);
+                //验证cookies是否有效
+                JSONObject headerUser = new JSONObject();
+                headerUser.put(Start.headerAgent, Start.headerAgentArg);
+                headers.put("Cookie", localCookies);
+                String userInfo = HttpUrlConnectionUtil.get(headerUser, "https://order.jd.com/center/list.action","UTF-8");
+                log.info(userInfo);
+
+            };
+        }
         //判断是否扫二维码
         while (true) {
             String checkUrl = "https://qr.m.jd.com/check?appid=133&callback=jQuery" + (int) ((Math.random() * (9999999 - 1000000 + 1)) + 1000000) + "&token=" + token + "&_=" + System.currentTimeMillis();
-            String qrCode = HttpUrlConnectionUtil.get(headers, checkUrl);
+            String qrCode = HttpUrlConnectionUtil.get(headers, checkUrl,"UTF-8");
             if (qrCode.indexOf("二维码未扫描") != -1) {
                 log.info("二维码未扫描，请扫描二维码登录");
             } else if (qrCode.indexOf("请手机客户端确认登录") != -1) {
@@ -61,11 +86,38 @@ public class Login {
             Thread.sleep(1000);
         }
         //验证，获取cookie
-        String qrCodeTicketValidation = HttpUrlConnectionUtil.get(headers, "https://passport.jd.com/uc/qrCodeTicketValidation?t=" + ticket);
+        String qrCodeTicketValidation = HttpUrlConnectionUtil.get(headers, "https://passport.jd.com/uc/qrCodeTicketValidation?t=" + ticket,"UTF-8");
         stringListMap = Start.manager.get(url, requestHeaders);
         cookieList = stringListMap.get("Cookie");
         cookies = cookieList.get(0).toString();
         headers.put("Cookie", cookies);
+
+        //获取用户信息
+        String checkUrl = "https://qr.m.jd.com/check?appid=133&callback=jQuery" + (int) ((Math.random() * (9999999 - 1000000 + 1)) + 1000000) + "&token=" + token + "&_=" + System.currentTimeMillis();
+        String qrCode = HttpUrlConnectionUtil.get(headers, checkUrl,"UTF-8");
+
+        String userUrl = "https://passport.jd.com/user/petName/getUserInfoForMiniJd.action";
+        JSONObject headerUser = new JSONObject();
+        headerUser.put(Start.headerAgent, Start.headerAgentArg);
+        headerUser.put(Start.Referer, Start.RefererUser);
+        String userInfo = HttpUrlConnectionUtil.get(headerUser, userUrl,"GBK");
+
+        String nickName="nickName";
+        if(userInfo!=null&&userInfo.contains("nickName")){
+            nickName=(String)JSONObject.parseObject(userInfo.replaceAll("\\(\\{","{").replaceAll("\\}\\)","}")).get("nickName");
+
+        }
+
+        String cookiePath=filePath+nickName+".cookies";
+
+        if(!FileUtil.exist(cookiePath)){
+            FileUtil.writeString(cookies,cookiePath, Charset.defaultCharset());
+            log.info("save cookies:{}",cookies);
+        }else{
+            FileUtil.mkParentDirs(cookiePath);
+            String localCookies=FileUtil.readString(cookiePath, Charset.defaultCharset());
+            log.info("read cookies:{}",localCookies);
+        }
     }
 
     public static void close() throws IOException, InterruptedException {

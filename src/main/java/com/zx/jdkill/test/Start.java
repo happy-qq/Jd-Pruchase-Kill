@@ -26,6 +26,7 @@ public class Start {
     final static String headerAgentArg = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36";
     final static String Referer = "Referer";
     final static String RefererArg = "https://passport.jd.com/new/login.aspx";
+    final static String RefererUser = "https://order.jd.com/center/list.action";
     //商品id
     static String pid = "";
     //eid
@@ -81,21 +82,22 @@ public class Start {
         JSONObject headers = new JSONObject();
         headers.put(Start.headerAgent, Start.headerAgentArg);
         headers.put(Start.Referer, Start.RefererArg);
-        JSONObject shopDetail = JSONObject.parseObject(HttpUrlConnectionUtil.get(headers, "https://item-soa.jd.com/getWareBusiness?skuId=" + pid));
+        JSONObject shopDetail = JSONObject.parseObject(HttpUrlConnectionUtil.get(headers, "https://item-soa.jd.com/getWareBusiness?skuId=" + pid,"UTF-8"));
         if (shopDetail.get("yuyueInfo") != null) {
             String buyDate = JSONObject.parseObject(shopDetail.get("yuyueInfo").toString()).get("buyTime").toString();
             String startDate = buyDate.split("-202")[0] + ":00";
             Long startTime = HttpUrlConnectionUtil.dateToTime(startDate);
             //开始抢购
             //获取京东时间
-            JSONObject jdTime = JSONObject.parseObject(HttpUrlConnectionUtil.get(headers, "https://a.jd.com//ajax/queryServerData.html"));
+            JSONObject jdTime = JSONObject.parseObject(HttpUrlConnectionUtil.get(headers, "https://a.jd.com//ajax/queryServerData.html","UTF-8"));
             Long serverTime = Long.valueOf(jdTime.get("serverTime").toString());
             Long cha = serverTime + 10 - System.currentTimeMillis();
             while (true) {
                 if (System.currentTimeMillis() + cha < startTime) {
                     log.info("正在等待抢购时间");
-                    TimeUnit.MILLISECONDS.sleep(100);
+                    TimeUnit.MILLISECONDS.sleep(200);
                 } else {
+                    log.info("时间到达，开始执行……");
                     break;
                 }
             }
