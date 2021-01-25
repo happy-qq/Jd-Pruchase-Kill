@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -21,6 +23,7 @@ public class RushToPurchase implements Runnable {
     static Map<String, List<String>> stringListMap = new HashMap<String, List<String>>();
     volatile static Integer times = 0;
     volatile static Boolean purchase = true;
+    static Logger log = LoggerFactory.getLogger(RushToPurchase.class);
 
     public void run() {
         JSONObject headers = new JSONObject();
@@ -39,7 +42,7 @@ public class RushToPurchase implements Runnable {
                     if (times < Start.ok) {
                         gate = HttpUrlConnectionUtil.get(headers, "https://cart.jd.com/gate.action?pcount=1&ptype=1&pid=" + Start.pid);
                         if (!gate.contains("商品已成功加入")) {
-                            System.out.println("获取商品信息失败");
+                            log.info("获取商品信息失败");
                             continue;
                         } else {
                             times++;
@@ -103,7 +106,7 @@ public class RushToPurchase implements Runnable {
                 e.printStackTrace();
             }
             if (submitOrder.contains("刷新太频繁了") || submitOrder.contains("抱歉，您访问的内容不存在")) {
-                System.out.println("刷新太频繁了,您访问的内容不存在");
+                log.info("刷新太频繁了,您访问的内容不存在");
                 continue;
             }
             JSONObject jsonObject = JSONObject.parseObject(submitOrder);
@@ -117,21 +120,21 @@ public class RushToPurchase implements Runnable {
             }
             if (times >= Start.ok) {
                 if ("true".equals(success)) {
-                    System.out.println("已成功抢购" + times + "件，请尽快完成付款");
+                    log.info("已成功抢购" + times + "件，请尽快完成付款");
                     purchase = false;
                 } else {
                     if (message != null) {
-                        System.out.println(message);
+                        log.info(message);
                     } else if (submitOrder.contains("很遗憾没有抢到")) {
-                        System.out.println("很遗憾没有抢到，再接再厉哦");
+                        log.info("很遗憾没有抢到，再接再厉哦");
                     } else if (submitOrder.contains("抱歉，您提交过快，请稍后再提交订单！")) {
-                        System.out.println("抱歉，您提交过快，请稍后再提交订单！");
+                        log.info("抱歉，您提交过快，请稍后再提交订单！");
                     } else if (submitOrder.contains("系统正在开小差，请重试~~")) {
-                        System.out.println("系统正在开小差，请重试~~");
+                        log.info("系统正在开小差，请重试~~");
                     } else if (submitOrder.contains("您多次提交过快")) {
-                        System.out.println("您多次提交过快，请稍后再试");
+                        log.info("您多次提交过快，请稍后再试");
                     } else {
-                        System.out.println("获取用户订单信息失败");
+                        log.info("获取用户订单信息失败");
                     }
                 }
             }

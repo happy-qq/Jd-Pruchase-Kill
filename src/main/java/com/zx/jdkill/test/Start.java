@@ -14,6 +14,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author: zhaoxu
@@ -36,6 +38,8 @@ public class Start {
     static String getIpUrl = "";
 
     static CookieManager manager = new CookieManager();
+
+    static Logger log = LoggerFactory.getLogger(Start.class);
 
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException, ParseException {
         initData();
@@ -67,7 +71,7 @@ public class Start {
             getIpUrl = fileData.split("getIpUrl=")[1].split(";")[0];
             HttpUrlConnectionUtil.ips(getIpUrl);
         } catch (Exception e) {
-            System.out.println("参数错误，每个参数后面需要加分号");
+            log.info("参数错误，每个参数后面需要加分号");
         }
 
     }
@@ -89,7 +93,7 @@ public class Start {
             Long cha = serverTime + 10 - System.currentTimeMillis();
             while (true) {
                 if (System.currentTimeMillis() + cha < startTime) {
-                    System.out.println("正在等待抢购时间");
+                    log.info("正在等待抢购时间");
                     TimeUnit.MILLISECONDS.sleep(100);
                 } else {
                     break;

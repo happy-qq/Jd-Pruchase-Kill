@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+  <!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径 -->
+  <property name="LOG_SYSTEM" value="jd"/>
+  <property name="LOG_HOME" value="/wls/applogs/logs/${LOG_SYSTEM}"/>
+
+
+  <!-- 控制台输出 -->
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <!--格式化输出：%d表示日期，%thread表示线程名，%level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符 -->
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %level ${LOG_SYSTEM} [%logger{20}_%M] - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- 默认日志文件 -->
+  <appender name="defaultAppender"
+    class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_HOME}/default.log</file>
+    <!--日志文件输出的文件名 -->
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <FileNamePattern>${LOG_HOME}/%d{yyyy-MM-dd}/default.log.gz
+      </FileNamePattern>
+      <MaxHistory>30</MaxHistory>
+    </rollingPolicy>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <!--格式化输出：%d表示日期，%thread表示线程名，%level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符 -->
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %X{X-B3-TraceId:-}-%X{X-B3-SpanId:-} %level ${LOG_SYSTEM} [%logger{20}_%M] - %msg%n
+      </pattern>
+    </encoder>
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>INFO</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+  </appender>
+
+  <!-- 异常日志文件 -->
+  <appender name="errorAppender"
+    class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_HOME}/error.log</file>
+    <!--日志文件输出的文件名 -->
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <FileNamePattern>${LOG_HOME}/%d{yyyy-MM-dd}/error.log.gz
+      </FileNamePattern>
+      <MaxHistory>30</MaxHistory>
+    </rollingPolicy>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <!--格式化输出：%d表示日期，%thread表示线程名，%level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符 -->
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %X{X-B3-TraceId:-}-%X{X-B3-SpanId:-} %level ${LOG_SYSTEM} - %msg%n
+      </pattern>
+    </encoder>
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>ERROR</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+  </appender>
+
+
+  <!-- 按照每天生成审计日志文件 -->
+  <appender name="accessAppender"
+    class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_HOME}/access.log</file>
+    <!--日志文件输出的文件名 -->
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <FileNamePattern>${LOG_HOME}/%d{yyyy-MM-dd}/access.log.gz
+      </FileNamePattern>
+      <MaxHistory>30</MaxHistory>
+    </rollingPolicy>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <!--格式化输出：%d表示日期，%thread表示线程名，%level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符 -->
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %X{X-B3-TraceId:-}-%X{X-B3-SpanId:-} %level ${LOG_SYSTEM} %msg%n</pattern>
+    </encoder>
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>INFO</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+  </appender>
+
+
+  <!-- 默认日志 -->
+  <logger name="com.pingan.boot.ekyc" additivity="false">
+    <!-- TODO:控制台输出只用在开发阶段，上线时请删除 STDOUT -->
+    <appender-ref ref="STDOUT"/>
+    <appender-ref ref="defaultAppender"/>
+  </logger>
+
+  <!-- 全局异常日志 -->
+  <logger name="com.pingan.boot.common.tools.exception.handler.GlobalExceptionHandler"
+    additivity="false">
+    <!-- TODO:控制台输出只用在开发阶段，上线时请删除 STDOUT -->
+    <appender-ref ref="STDOUT"/>
+    <appender-ref ref="errorAppender"/>
+  </logger>
+
+  <!-- 审计日志-->
+  <logger name="com.pingan.boot.web.aspect.SdkLogAspect" additivity="false">
+    <appender-ref ref="accessAppender"/>
+  </logger>
+
+
+
+  <!-- 异步输出 -->
+  <appender name="asyncErrorAppender" level="ERROR" addtivity="false" class="ch.qos.logback.classic.AsyncAppender">
+    <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
+    <!-- <discardingThreshold >0</discardingThreshold>  -->
+    <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+    <queueSize>50000</queueSize>
+    <includeCallerData>true</includeCallerData>
+    <!-- 添加附加的appender,最多只能添加一个 -->
+    <appender-ref ref="errorAppender"/>
+  </appender>
+
+
+  <!-- 异步输出 -->
+  <appender name="asyncAccessAppender"   level="WARN" addtivity="false" class="ch.qos.logback.classic.AsyncAppender">
+    <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
+    <!-- <discardingThreshold >0</discardingThreshold>  -->
+    <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+    <queueSize>50000</queueSize>
+    <includeCallerData>true</includeCallerData>
+    <!-- 添加附加的appender,最多只能添加一个 -->
+    <appender-ref ref="accessAppender"/>
+  </appender>
+
+  <!-- 异步输出 -->
+  <appender name="asyncDefaultAppender" level="INFO" addtivity="false" class="ch.qos.logback.classic.AsyncAppender">
+    <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
+    <!-- <discardingThreshold >0</discardingThreshold>  -->
+    <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+    <queueSize>50000</queueSize>
+    <includeCallerData>true</includeCallerData>
+    <!-- 添加附加的appender,最多只能添加一个 -->
+    <appender-ref ref="defaultAppender"/>
+  </appender>
+
+  <!-- 日志输出级别 -->
+  <root level="INFO">
+    <appender-ref ref="STDOUT" />
+    <appender-ref ref="asyncDefaultAppender" />
+    <appender-ref ref="asyncAccessAppender" />
+    <appender-ref ref="asyncErrorAppender" />
+  </root>
+</configuration>
+

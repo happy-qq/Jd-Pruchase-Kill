@@ -193,7 +193,7 @@ public class HttpUrlConnectionUtil {
 //    for(Object json:jsons){
 //        JSONObject ips = JSONObject.parseObject(json.toString());
 //        String ip = ips.get("IP").toString();
-//        System.out.println(ip);
+//        log.info(ip);
 //        ipp.add(ip);
 //    }
         ips = ipp;

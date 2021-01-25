@@ -13,6 +13,8 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author: zhaoxu
@@ -22,6 +24,7 @@ public class Login {
     static String venderId = "";
     static Map<String, List<String>> requestHeaders = new HashMap<String, List<String>>(16);
     static String ticket = "";
+    static Logger log = LoggerFactory.getLogger(Login.class);
 
     public static void Login() throws IOException, URISyntaxException, InterruptedException {
         JSONObject headers = new JSONObject();
@@ -45,13 +48,13 @@ public class Login {
             String checkUrl = "https://qr.m.jd.com/check?appid=133&callback=jQuery" + (int) ((Math.random() * (9999999 - 1000000 + 1)) + 1000000) + "&token=" + token + "&_=" + System.currentTimeMillis();
             String qrCode = HttpUrlConnectionUtil.get(headers, checkUrl);
             if (qrCode.indexOf("二维码未扫描") != -1) {
-                System.out.println("二维码未扫描，请扫描二维码登录");
+                log.info("二维码未扫描，请扫描二维码登录");
             } else if (qrCode.indexOf("请手机客户端确认登录") != -1) {
-                System.out.println("请手机客户端确认登录");
+                log.info("请手机客户端确认登录");
             } else {
                 ticket = qrCode.split("\"ticket\" : \"")[1].split("\"\n" +
                         "}\\)")[0];
-                System.out.println("已完成二维码扫描登录");
+                log.info("已完成二维码扫描登录");
                 close();
                 break;
             }
